@@ -4,39 +4,58 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.utility.PhoenixPIDController;
+import com.pathplanner.lib.auto.NamedCommands;
 
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Utils.FieldCentricFacingAngle180;
+import frc.robot.Constants.OperatorConstants;
+import frc.robot.Util.FieldCentricFacingAngle180;
+import frc.robot.commands.CalibrateIntake;
+import frc.robot.commands.IntakeCommand;
+import frc.robot.commands.LowerIntake;
+import frc.robot.commands.ShootingCommand;
+import frc.robot.commands.ShootingCommand2;
+import frc.robot.commands.ShootingCommandGroup;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Shoooter;
 
 public class RobotContainer {
   private double MaxSpeed = 6; // 6 meters per second desired top speed
   private double MaxAngularRate = 1.5 * Math.PI; // 3/4 of a rotation per second max angular velocity
 
   /* Setting up bindings for necessary control of the swerve drive platform */
-  private final CommandXboxController joystick = new CommandXboxController(0); // My joystick
+  private final CommandXboxController driveController = new CommandXboxController(OperatorConstants.kDriverControllerPort); 
+   private final CommandXboxController operatorController = new CommandXboxController(OperatorConstants.kOperatorControllerPort);// My driveController
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // My drivetrain
+  private final Shoooter shooter = new Shoooter();
+  private final Intake intake = new Intake();
+
+  private SlewRateLimiter slewwyY = new SlewRateLimiter(0.75);
+  private SlewRateLimiter slewwyX = new SlewRateLimiter(.75);
+  private SlewRateLimiter slewwyY2 = new SlewRateLimiter(0.75);
+  private SlewRateLimiter slewwyX2 = new SlewRateLimiter(.75);
+
+    
 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-      .withDeadband(MaxSpeed * 0.2).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+      .withDeadband(MaxSpeed*0.05).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // I want field-centric
                                                                // driving in open loop
   private final SwerveRequest.FieldCentricFacingAngle driveFacing = new SwerveRequest.FieldCentricFacingAngle()
-      .withDeadband(MaxSpeed * 0.2).withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+      .withDeadband(MaxSpeed * 0.05).withDriveRequestType(DriveRequestType.OpenLoopVoltage);
       private final FieldCentricFacingAngle180 driveFacing180 = new FieldCentricFacingAngle180()
       .withDeadband(MaxSpeed * 0.2).withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-  private final PhoenixPIDController steerController = new PhoenixPIDController(10, 0, 0.05);
+  private final PhoenixPIDController steerController = new PhoenixPIDController(3, 0, 0.05);
   private final PhoenixPIDController steerController180 = new PhoenixPIDController(0.3, 0.001, 0.01);
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
@@ -53,66 +72,85 @@ public class RobotContainer {
   private void configureBindings() {
     driveFacing.HeadingController = steerController;
     driveFacing180.HeadingController = steerController180;
-
-
+    operatorController.b().whileTrue(new ShootingCommand2(shooter));
+    intake.setDefaultCommand(new IntakeCommand(intake, ()-> driveController.a().getAsBoolean(), ()-> operatorController.rightBumper().getAsBoolean(),()-> operatorController.leftBumper().getAsBoolean(),()->operatorController.y().getAsBoolean()));
+    operatorController.x().whileTrue(new ShootingCommand(shooter));
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
-        drivetrain.applyRequest(() -> drive.withVelocityX(-joyLeftY() * MaxSpeed * speedScale) // Drive forward with
+        drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
                                                                                            // negative Y (forward)
-            .withVelocityY(-joyLeftX() * MaxSpeed * speedScale) // Drive left with negative X (left)
+            .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * speedScale) // Drive left with negative X (left)
             .withRotationalRate(-joyRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
         ).ignoringDisable(true));
 
-    joystick.leftBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(-joyLeftY() * MaxSpeed * slowSpeed) // Drive forward with
+    driveController.leftBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(joyLeftY() * MaxSpeed * slowSpeed) // Drive forward with
                                                                                            // negative Y (forward)
-            .withVelocityY(-joyLeftX() * MaxSpeed * slowSpeed) // Drive left with negative X (left)
+            .withVelocityY(joyLeftX() * MaxSpeed * slowSpeed) // Drive left with negative X (left)
             .withRotationalRate(-joyRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
         ).ignoringDisable(true));
-    joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-    joystick.b().whileTrue(drivetrain
-        .applyRequest(() -> point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
-    joystick.x().whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(-joystick.getLeftY() * MaxSpeed * speedScale) // Drive forward with
+    driveController.rightBumper().whileTrue(drivetrain.applyRequest(() -> brake));
+    driveController.b().whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
                                                                                                              // negative Y (forward)
-            .withVelocityY(-joystick.getLeftX() * MaxSpeed * speedScale) // Drive left with negative X (left)
-            .withTargetDirection(Rotation2d.fromDegrees(-90))
+            .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * speedScale) // Drive left with negative X (left)
+            .withTargetDirection(Rotation2d.fromDegrees(90))
     ));
-    joystick.y().whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(-joystick.getLeftY() * MaxSpeed * speedScale) // Drive forward with
+    driveController.x().whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
                                                                                                              // negative Y (forward)
-            .withVelocityY(-joystick.getLeftX() * MaxSpeed * speedScale) // Drive left with negative X (left)
+            .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * speedScale) // Drive left with negative X (left)
             .withTargetDirection(Rotation2d.fromDegrees(0))
+    ));
+    driveController.a().whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
+                                                                                                             // negative Y (forward)
+            .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * speedScale) // Drive left with negative X (left)
+            .withTargetDirection(Rotation2d.fromDegrees(-60))
+    ));
+    driveController.y().whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
+                                                                                                             // negative Y (forward)
+            .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * speedScale) // Drive left with negative X (left)
+            .withTargetDirection(Rotation2d.fromDegrees(60))
     ));
 
     // reset the field-centric heading on left bumper press
-    joystick.leftTrigger().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+    driveController.leftTrigger().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
 
     if (Utils.isSimulation()) {
-      drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
+      drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(-90)));
     }
     drivetrain.registerTelemetry(logger::telemeterize);
 
-    joystick.pov(0).whileTrue(drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0.5).withVelocityY(0)));
-    joystick.pov(180).whileTrue(drivetrain.applyRequest(() -> forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
+    driveController.pov(0).whileTrue(drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0.5).withVelocityY(0)));
+    driveController.pov(180).whileTrue(drivetrain.applyRequest(() -> forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
   }
 
-  public RobotContainer() {     
+  public RobotContainer() {
+    NamedCommands.registerCommand("LowerIntake", new LowerIntake(intake));
     configureBindings();
-    
+    SignalLogger.stop();
   }
 
   public double joyLeftY(){
-    if(joystick.getLeftY()< -0.1 || joystick.getLeftY() > 0.1)
-      return joystick.getLeftY()*joystick.getLeftY();
+    int sign = 1;
+    if(driveController.getLeftY()<0)
+      sign=-1;
+    if(driveController.getLeftY()< -0.1 || driveController.getLeftY() > 0.1)
+      return driveController.getLeftY()*driveController.getLeftY()*sign;
     return 0;
   }
 
-    public double joyLeftX(){
-    if(joystick.getLeftX()< -0.1 || joystick.getLeftX() > 0.1)
-      return joystick.getLeftX()*joystick.getLeftY();
+  public double joyLeftX(){
+    int sign = 1;
+    if(driveController.getLeftX()<0)
+      sign=-1;
+    if(driveController.getLeftX()< -0.1 || driveController.getLeftX() > 0.1)
+      return driveController.getLeftX()*driveController.getLeftX()*sign;
     return 0;
   }
 
-    public double joyRightX(){
-    if(joystick.getRightX()< -0.1 || joystick.getRightX() > 0.1)
-      return joystick.getRightX()*joystick.getLeftY();
+  public double joyRightX(){
+    int sign = 1;
+    if(driveController.getRightX()<0)
+      sign=-1;
+    if(driveController.getRightX()< -0.1 || driveController.getRightX() > 0.1)
+      return driveController.getRightX()*driveController.getRightX()*sign;
     return 0;
   }
 
@@ -120,5 +158,6 @@ public class RobotContainer {
     // return new SequentialCommandGroup(new ParallelDeadlineGroup(new WaitCommand(5), drivetrain.applyRequest(()->point.withModuleDirection(Rotation2d.fromDegrees(0)))),new ParallelDeadlineGroup(new WaitCommand(5), drivetrain.applyRequest(()->point.withModuleDirection(Rotation2d.fromDegrees(90)))),new ParallelDeadlineGroup(new WaitCommand(5), drivetrain.applyRequest(()->point.withModuleDirection(Rotation2d.fromDegrees(180)))));
     /* First put the drivetrain into auto run mode, then run the auto */
     return runAuto;
+    // return new CalibrateIntake(intake);
   }
 }
