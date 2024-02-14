@@ -5,7 +5,7 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
+// import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
@@ -19,8 +19,8 @@ public class Shoooter extends SubsystemBase {
   private SparkPIDController leftPID;
   private SparkPIDController rightPID;
 
-  private RelativeEncoder leftEncoder; 
-  private RelativeEncoder rightEncoder; 
+  // private RelativeEncoder leftEncoder; 
+  // private RelativeEncoder rightEncoder; 
 
 
   public CANSparkMax leftWheels = new CANSparkMax(OperatorConstants.leftShooterWheelID,MotorType.kBrushless);
@@ -32,8 +32,8 @@ public class Shoooter extends SubsystemBase {
   public Shoooter() {
     rightWheels.setInverted(false);
     leftWheels.setInverted(true);
-    leftEncoder = leftWheels.getEncoder();
-    rightEncoder = rightWheels.getEncoder();
+    // leftEncoder = leftWheels.getEncoder();
+    // rightEncoder = rightWheels.getEncoder();
     leftPID = leftWheels.getPIDController();
     rightPID = rightWheels.getPIDController();
     rightWheels.setIdleMode(IdleMode.kBrake);

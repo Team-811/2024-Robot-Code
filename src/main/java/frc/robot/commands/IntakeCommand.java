@@ -54,7 +54,7 @@ public class IntakeCommand extends Command {
       isTurningToFloor =! myIntake.turnToPoint(OperatorConstants.intakeFloorSetPoint);
     }
     if (isTurningToShooter == false && isTurningToFloor == false) {
-
+      myIntake.stopPivot();
       if (shouldTurnToShooter.getAsBoolean()== true) {
        isTurningToShooter = true; 
       }

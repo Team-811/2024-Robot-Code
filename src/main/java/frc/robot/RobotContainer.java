@@ -9,20 +9,19 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.utility.PhoenixPIDController;
-import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Util.FieldCentricFacingAngle180;
-import frc.robot.commands.CalibrateIntake;
 import frc.robot.commands.IntakeCommand;
-import frc.robot.commands.LowerIntake;
-import frc.robot.commands.ShootingCommand;
+import frc.robot.commands.OneNoteAuto;
 import frc.robot.commands.ShootingCommand2;
 import frc.robot.commands.ShootingCommandGroup;
 import frc.robot.generated.TunerConstants;
@@ -42,10 +41,8 @@ public class RobotContainer {
 
   private SlewRateLimiter slewwyY = new SlewRateLimiter(0.75);
   private SlewRateLimiter slewwyX = new SlewRateLimiter(.75);
-  private SlewRateLimiter slewwyY2 = new SlewRateLimiter(0.75);
-  private SlewRateLimiter slewwyX2 = new SlewRateLimiter(.75);
 
-    
+  private SendableChooser<Command> autoChooser = new SendableChooser<>();
 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
       .withDeadband(MaxSpeed*0.05).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
@@ -59,22 +56,23 @@ public class RobotContainer {
   private final PhoenixPIDController steerController180 = new PhoenixPIDController(0.3, 0.001, 0.01);
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-  private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+  // private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
   private double speedScale = 0.45;
   private double slowSpeed = 0.2;
 
   /* Path follower */
   // private Command runAuto = drivetrain.getAutoPath("3 Note Auto");
-  private Command runAuto = drivetrain.getAutoPath("3 Note Auto");
+  // private Command runAuto = drivetrain.getAutoPath("3 Note Auto");
   private final Telemetry logger = new Telemetry(MaxSpeed);
 
   private void configureBindings() {
     driveFacing.HeadingController = steerController;
     driveFacing180.HeadingController = steerController180;
+    operatorController.leftTrigger().whileTrue(new InstantCommand(()->intake.syncEncoder(), intake));
     operatorController.b().whileTrue(new ShootingCommand2(shooter));
-    intake.setDefaultCommand(new IntakeCommand(intake, ()-> driveController.a().getAsBoolean(), ()-> operatorController.rightBumper().getAsBoolean(),()-> operatorController.leftBumper().getAsBoolean(),()->operatorController.y().getAsBoolean()));
-    operatorController.x().whileTrue(new ShootingCommand(shooter));
+    intake.setDefaultCommand(new IntakeCommand(intake, ()-> operatorController.a().getAsBoolean(), ()-> operatorController.rightBumper().getAsBoolean(),()-> operatorController.leftBumper().getAsBoolean(),()->operatorController.y().getAsBoolean()));
+    operatorController.x().whileTrue(new ShootingCommandGroup(intake,shooter));
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
         drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
                                                                                            // negative Y (forward)
@@ -122,9 +120,11 @@ public class RobotContainer {
   }
 
   public RobotContainer() {
-    NamedCommands.registerCommand("LowerIntake", new LowerIntake(intake));
+    // NamedCommands.registerCommand("LowerIntake", new LowerIntake(intake));
     configureBindings();
     SignalLogger.stop();
+    autoChooser.setDefaultOption("No Auto", null);
+    autoChooser.addOption("Stage Note", new OneNoteAuto(intake, drivetrain, shooter));
   }
 
   public double joyLeftY(){
@@ -157,7 +157,7 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // return new SequentialCommandGroup(new ParallelDeadlineGroup(new WaitCommand(5), drivetrain.applyRequest(()->point.withModuleDirection(Rotation2d.fromDegrees(0)))),new ParallelDeadlineGroup(new WaitCommand(5), drivetrain.applyRequest(()->point.withModuleDirection(Rotation2d.fromDegrees(90)))),new ParallelDeadlineGroup(new WaitCommand(5), drivetrain.applyRequest(()->point.withModuleDirection(Rotation2d.fromDegrees(180)))));
     /* First put the drivetrain into auto run mode, then run the auto */
-    return runAuto;
+    return autoChooser.getSelected();
     // return new CalibrateIntake(intake);
   }
 }

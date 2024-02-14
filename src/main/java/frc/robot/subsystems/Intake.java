@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
@@ -22,10 +23,10 @@ public class Intake extends SubsystemBase {
   private SparkPIDController wheelsPID;
   private SparkPIDController pivotPID;
 
-  private RelativeEncoder wheelsEncoder; 
+  // private RelativeEncoder wheelsEncoder; 
   private RelativeEncoder pivotEncoder;
 
-
+  private CANcoder absoluteEncoder = new CANcoder(19);
 
   public CANSparkMax Wheels = new CANSparkMax(OperatorConstants.intakeMotorWheelsID,MotorType.kBrushless);
   public CANSparkMax pivotMotor = new CANSparkMax(OperatorConstants.pivotMotorID,MotorType.kBrushless);
@@ -34,7 +35,7 @@ public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
   public Intake() {
     Wheels.setInverted(false);
-    wheelsEncoder = Wheels.getEncoder();
+    // wheelsEncoder = Wheels.getEncoder();
     wheelsPID = Wheels.getPIDController();
     Wheels.setIdleMode(IdleMode.kBrake);
     
@@ -43,6 +44,8 @@ public class Intake extends SubsystemBase {
     pivotPID = pivotMotor.getPIDController();
     pivotEncoder = pivotMotor.getEncoder();
     pivotMotor.setIdleMode(IdleMode.kBrake);
+
+    syncEncoder();
     
   }
 
@@ -54,9 +57,17 @@ public class Intake extends SubsystemBase {
     pivotPID.setFF(OperatorConstants.intakePivotkFF);
     pivotPID.setOutputRange(-1, 1);
     pivotPID.setReference(setPoint, ControlType.kPosition);
-    if (Math.abs(setPoint - pivotEncoder.getPosition())<1)
+    if (Math.abs(setPoint - pivotEncoder.getPosition())<1) 
       return true;
+    // if(setPoint<pivotEncoder.getPosition())
+    //   pivotMotor.set(-0.08);
+    // else
+    //   pivotMotor.set(0.08);
     return false;
+  }
+
+  public void stopPivot(){
+    pivotMotor.set(0);
   }
 
  public void spinIntake(double sped) {
@@ -66,8 +77,9 @@ public class Intake extends SubsystemBase {
     wheelsPID.setIZone(OperatorConstants.intakeWheelskIz);
     wheelsPID.setFF(OperatorConstants.intakeWheelskFF);
     wheelsPID.setOutputRange(-1, 1);
-    if (!noteLimitSwitch.get())
+    if (noteLimitSwitch.get())
       wheelsPID.setReference(sped, ControlType.kVelocity);
+      // Wheels.set(sped/5650);
     else {
       stopIntakeWheels();
     }
@@ -97,9 +109,14 @@ public class Intake extends SubsystemBase {
     Wheels.set(0);
   }
 
+  public void syncEncoder(){
+    pivotEncoder.setPosition(absoluteEncoder.getPosition().getValueAsDouble()*75);
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-
+    System.out.println(absoluteEncoder.getPosition().getValueAsDouble()*75);
+    // pivotEncoder.setPosition(absoluteEncoder.getPosition().getValueAsDouble()*75);
   }
 }
