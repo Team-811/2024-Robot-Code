@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Util.FieldCentricFacingAngle180;
+import frc.robot.commands.AmpShootingCommandGroup;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.OneNoteAuto;
 import frc.robot.commands.ShootingCommand2;
@@ -70,7 +71,7 @@ public class RobotContainer {
     driveFacing.HeadingController = steerController;
     driveFacing180.HeadingController = steerController180;
     operatorController.leftTrigger().whileTrue(new InstantCommand(()->intake.syncEncoder(), intake));
-    operatorController.b().whileTrue(new ShootingCommand2(shooter));
+    operatorController.b().whileTrue(new AmpShootingCommandGroup(intake,shooter));
     intake.setDefaultCommand(new IntakeCommand(intake, ()-> operatorController.a().getAsBoolean(), ()-> operatorController.rightBumper().getAsBoolean(),()-> operatorController.leftBumper().getAsBoolean(),()->operatorController.y().getAsBoolean()));
     operatorController.x().whileTrue(new ShootingCommandGroup(intake,shooter));
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
@@ -159,5 +160,11 @@ public class RobotContainer {
     /* First put the drivetrain into auto run mode, then run the auto */
     return autoChooser.getSelected();
     // return new CalibrateIntake(intake);
+  }
+
+  public void updateSmartdashboard(){
+    intake.updateSmartdashboard();
+    shooter.updateSmartdashboard();
+    drivetrain.updateSmartdashboard();
   }
 }

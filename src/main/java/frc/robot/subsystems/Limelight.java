@@ -10,9 +10,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.LimelightHelpers;
+import frc.robot.Util.ISubsystem;
 import frc.robot.Util.RectanglePoseArea;
 
-public class Limelight extends SubsystemBase {
+public class Limelight extends SubsystemBase implements ISubsystem{
   CommandSwerveDrivetrain drivetrain;
   Alliance alliance;
   private String ll = "limelight";
@@ -73,4 +74,11 @@ public class Limelight extends SubsystemBase {
   public void trustLL(boolean trust) {
     this.trust = trust;
   }
+
+  @Override
+  public void updateSmartdashboard() {
+
+  }
+
+  
 }

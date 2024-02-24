@@ -11,9 +11,8 @@ public class Constants {
         public static final int noteLimitSwitchID = 1;
         public static final int pivotLimitSwitchID = 2;
         public static final int pivotMotorID = 17;
-        //                                                      V enter degrees right there
-        public static final double intakeShooterSetPoint = -16.3;
-        public static final double intakeFloorSetPoint = 16.5;
+        public static final double intakeShooterSetPoint = 1;
+        public static final double intakeFloorSetPoint = 44.5;
         public static final int kDriverControllerPort = 0;
         public static final int kOperatorControllerPort = 1;
         public static final double intakeWheelskP = 0.00001;
@@ -34,6 +33,8 @@ public class Constants {
         public static final double shooterkFF = 0.00000481;
         public static final int leftShooterWheelID  = 3 ;
         public static final int rightShooterWheelID  = 7 ;
+        public static final int leftHookID = 19;
+        public static final int rightHookID = 20;
         //max speed 5675
         public static final double shootSpeed = 5675;
         public static final double ampSpeed = 350; 

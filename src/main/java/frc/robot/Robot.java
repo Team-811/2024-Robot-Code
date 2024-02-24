@@ -35,6 +35,7 @@ public class Robot extends TimedRobot {
         m_robotContainer.drivetrain.addVisionMeasurement(llPose, Timer.getFPGATimestamp());
       }
     }
+    m_robotContainer.updateSmartdashboard();
   }
 
   @Override

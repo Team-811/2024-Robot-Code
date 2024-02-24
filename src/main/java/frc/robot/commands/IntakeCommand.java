@@ -53,15 +53,17 @@ public class IntakeCommand extends Command {
     if (isTurningToFloor == true) {
       isTurningToFloor =! myIntake.turnToPoint(OperatorConstants.intakeFloorSetPoint);
     }
-    if (isTurningToShooter == false && isTurningToFloor == false) {
+    if (isTurningToShooter == false && isTurningToFloor == false) 
       myIntake.stopPivot();
-      if (shouldTurnToShooter.getAsBoolean()== true) {
-       isTurningToShooter = true; 
-      }
-      else if (shouldTurnToFloor.getAsBoolean()== true) {
-        isTurningToFloor = true;
-      }
+    if (shouldTurnToShooter.getAsBoolean()== true) {
+      isTurningToFloor=false;
+      isTurningToShooter = true; 
     }
+    else if (shouldTurnToFloor.getAsBoolean()== true) {
+      isTurningToShooter=false;
+      isTurningToFloor = true;
+    }
+    
   } 
   // Called once the command ends or is interrupted.
   @Override

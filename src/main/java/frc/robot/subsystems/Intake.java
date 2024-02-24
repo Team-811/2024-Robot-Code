@@ -7,16 +7,20 @@ package frc.robot.subsystems;
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.SparkAbsoluteEncoder.Type;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Util.ISubsystem;
 
-public class Intake extends SubsystemBase {
+public class Intake extends SubsystemBase implements ISubsystem{
   DigitalInput noteLimitSwitch = new DigitalInput(OperatorConstants.noteLimitSwitchID);
   DigitalInput pivotLimitSwitch = new DigitalInput(OperatorConstants.pivotLimitSwitchID);
 
@@ -25,8 +29,10 @@ public class Intake extends SubsystemBase {
 
   // private RelativeEncoder wheelsEncoder; 
   private RelativeEncoder pivotEncoder;
+  
 
   private CANcoder absoluteEncoder = new CANcoder(19);
+  // private AbsoluteEncoder absoluteEncoder;
 
   public CANSparkMax Wheels = new CANSparkMax(OperatorConstants.intakeMotorWheelsID,MotorType.kBrushless);
   public CANSparkMax pivotMotor = new CANSparkMax(OperatorConstants.pivotMotorID,MotorType.kBrushless);
@@ -40,11 +46,12 @@ public class Intake extends SubsystemBase {
     Wheels.setIdleMode(IdleMode.kBrake);
     
     
-
+    pivotMotor.setInverted(false);
     pivotPID = pivotMotor.getPIDController();
     pivotEncoder = pivotMotor.getEncoder();
     pivotMotor.setIdleMode(IdleMode.kBrake);
-
+    // absoluteEncoder = pivotMotor.getAbsoluteEncoder(Type.kDutyCycle);
+    // absoluteEncoder = pivotMotor.getAbsoluteEncoder(Type.kDutyCycle);
     syncEncoder();
     
   }
@@ -57,6 +64,7 @@ public class Intake extends SubsystemBase {
     pivotPID.setFF(OperatorConstants.intakePivotkFF);
     pivotPID.setOutputRange(-1, 1);
     pivotPID.setReference(setPoint, ControlType.kPosition);
+    SmartDashboard.putNumber("Pivot Setpoint", setPoint);
     if (Math.abs(setPoint - pivotEncoder.getPosition())<1) 
       return true;
     // if(setPoint<pivotEncoder.getPosition())
@@ -83,6 +91,7 @@ public class Intake extends SubsystemBase {
     else {
       stopIntakeWheels();
     }
+
     // System.out.println();
     // leftWheels.set(1);
     // rightWheels.set(1);
@@ -110,13 +119,25 @@ public class Intake extends SubsystemBase {
   }
 
   public void syncEncoder(){
-    pivotEncoder.setPosition(absoluteEncoder.getPosition().getValueAsDouble()*75);
+    // pivotEncoder.setPosition(-absoluteEncoder.getPosition().getValueAsDouble()*75);
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    System.out.println(absoluteEncoder.getPosition().getValueAsDouble()*75);
+    // System.out.println(absoluteEncoder.getPosition().getValueAsDouble()*75);
     // pivotEncoder.setPosition(absoluteEncoder.getPosition().getValueAsDouble()*75);
+  }
+
+  @Override
+  public void updateSmartdashboard() {
+    // System.out.println(pivotEncoder.getPosition());
+    SmartDashboard.putNumber("Pivot Relative", pivotEncoder.getPosition());
+    SmartDashboard.putNumber("Pivot Absolute", -absoluteEncoder.getPosition().getValueAsDouble()*75);
+    System.out.println(-absoluteEncoder.getPosition().getValueAsDouble()*75);
+    boolean pivotSynced = false;
+    if(Math.abs(pivotEncoder.getPosition()-(absoluteEncoder.getPosition().getValueAsDouble()*75))<0.1)
+      pivotSynced = true;
+    SmartDashboard.putBoolean("Pivot Synced", pivotSynced);
   }
 }
