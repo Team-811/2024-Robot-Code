@@ -6,14 +6,15 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Climber;
 
-public class EjectNote extends Command {
-  Intake myIntake;
-  /** Creates a new EjectNote. */
-  public EjectNote(Intake intake) {
-    myIntake = intake;
-    addRequirements(myIntake);
+public class RetractClimber extends Command {
+  Climber mClimber;
+
+  /** Creates a new RetractClimber. */
+  public RetractClimber(Climber climber) {
+    mClimber = climber;
+    addRequirements(mClimber);
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
@@ -24,13 +25,13 @@ public class EjectNote extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    myIntake.spinIntakeIgnoreLimit(OperatorConstants.intakeWheelsSpeed);
+    mClimber.spinClimber(OperatorConstants.climberSpeed);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    myIntake.stopIntakeWheels();
+    mClimber.stopClimber();
   }
 
   // Returns true when the command should end.

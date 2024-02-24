@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shoooter;
@@ -15,9 +16,10 @@ import frc.robot.subsystems.Shoooter;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class OneNoteAuto extends SequentialCommandGroup {
   /** Creates a new OneNoteAuto. */
-  public OneNoteAuto(Intake outie, CommandSwerveDrivetrain swervy, Shoooter spitout) {
+  public OneNoteAuto(Intake outie, CommandSwerveDrivetrain swervy, Shoooter spitout, String pathName) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(new LowerIntake(outie),new ParallelDeadlineGroup(swervy.getAutoPath("1 Note Auto"), new SpinIntake(outie)),new RaiseIntake(outie),new ShootingCommandGroup(outie, spitout));
+    addCommands(new ShootingCommandGroup(outie, spitout), new SequencedNoteAuto(outie, swervy, spitout, pathName));
+    // addCommands(new ShootingCommandGroup(outie, spitout), new ParallelDeadlineGroup(new WaitCommand(2), new LowerIntake(outie)),new ParallelDeadlineGroup(swervy.getAutoPath(pathName), new SpinIntake(outie)), new ParallelDeadlineGroup(new WaitCommand(3),  new RaiseIntake(outie)),new ShootingCommandGroup(outie, spitout));
   }
 }

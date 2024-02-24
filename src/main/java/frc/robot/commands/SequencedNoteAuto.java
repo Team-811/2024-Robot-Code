@@ -8,17 +8,22 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shoooter;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class AmpShootingCommandGroup extends SequentialCommandGroup {
-  /** Creates a new ShootingCommandGroup. */
-  public AmpShootingCommandGroup(Intake intake, Shoooter shooter) {
+public class SequencedNoteAuto extends SequentialCommandGroup {
+  /** Creates a new TopNoteAuto. */
+  public SequencedNoteAuto(Intake outie, CommandSwerveDrivetrain swervy, Shoooter spitout, String pathName) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(new ParallelDeadlineGroup(new WaitCommand(4), new ParallelCommandGroup(new ShootingCommand(shooter),new SequentialCommandGroup(new WaitCommand(0.1), new EjectNote(intake)))));
+    double number = 3;
+    if(pathName.equals("MidMid"))
+      number = 2.5;
+    addCommands(new ParallelDeadlineGroup(swervy.getAutoPath(pathName), new SequentialCommandGroup(new ParallelDeadlineGroup(new WaitCommand(number), new SpinIntake(outie)), new RaiseIntake(outie))), new RaiseIntake(outie),new ShootingCommandGroup(outie, spitout));
   }
 }
+

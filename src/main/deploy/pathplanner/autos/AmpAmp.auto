@@ -1,6 +1,12 @@
 {
   "version": 1.0,
-  "startingPose": null,
+  "startingPose": {
+    "position": {
+      "x": 0.83,
+      "y": 6.63
+    },
+    "rotation": -120.0
+  },
   "command": {
     "type": "sequential",
     "data": {
@@ -8,7 +14,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Note 1"
+            "pathName": "AmpAmpPath"
           }
         }
       ]

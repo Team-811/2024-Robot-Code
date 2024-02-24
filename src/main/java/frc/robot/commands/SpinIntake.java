@@ -25,11 +25,14 @@ public class SpinIntake extends Command {
   @Override
   public void execute() {
     myIntake.spinIntake(-OperatorConstants.intakeWheelsSpeed);
+    myIntake.turnToPoint(OperatorConstants.intakeFloorSetPoint);
   }
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    myIntake.stopIntakeWheels();
+  }
 
   // Returns true when the command should end.
   @Override

@@ -8,10 +8,12 @@ import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.SparkAbsoluteEncoder.Type;
+import com.revrobotics.SparkAnalogSensor.Mode;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkAnalogSensor;
 import com.revrobotics.SparkPIDController;
 
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -31,8 +33,8 @@ public class Intake extends SubsystemBase implements ISubsystem{
   private RelativeEncoder pivotEncoder;
   
 
-  private CANcoder absoluteEncoder = new CANcoder(19);
-  // private AbsoluteEncoder absoluteEncoder;
+  // private CANcoder absoluteEncoder = new CANcoder(19);
+  // private SparkAnalogSensor  absoluteEncoder;
 
   public CANSparkMax Wheels = new CANSparkMax(OperatorConstants.intakeMotorWheelsID,MotorType.kBrushless);
   public CANSparkMax pivotMotor = new CANSparkMax(OperatorConstants.pivotMotorID,MotorType.kBrushless);
@@ -50,10 +52,10 @@ public class Intake extends SubsystemBase implements ISubsystem{
     pivotPID = pivotMotor.getPIDController();
     pivotEncoder = pivotMotor.getEncoder();
     pivotMotor.setIdleMode(IdleMode.kBrake);
-    // absoluteEncoder = pivotMotor.getAbsoluteEncoder(Type.kDutyCycle);
-    // absoluteEncoder = pivotMotor.getAbsoluteEncoder(Type.kDutyCycle);
+    // absoluteEncoder = pivotMotor.getAnalog(Mode.kAbsolute);
+    pivotPID.setFeedbackDevice(pivotEncoder);
     syncEncoder();
-    
+    pivotMotor.setCANTimeout(0);
   }
 
   public boolean turnToPoint(double setPoint) {
@@ -133,11 +135,12 @@ public class Intake extends SubsystemBase implements ISubsystem{
   public void updateSmartdashboard() {
     // System.out.println(pivotEncoder.getPosition());
     SmartDashboard.putNumber("Pivot Relative", pivotEncoder.getPosition());
-    SmartDashboard.putNumber("Pivot Absolute", -absoluteEncoder.getPosition().getValueAsDouble()*75);
-    System.out.println(-absoluteEncoder.getPosition().getValueAsDouble()*75);
-    boolean pivotSynced = false;
-    if(Math.abs(pivotEncoder.getPosition()-(absoluteEncoder.getPosition().getValueAsDouble()*75))<0.1)
-      pivotSynced = true;
-    SmartDashboard.putBoolean("Pivot Synced", pivotSynced);
+    SmartDashboard.putNumber("Something", pivotMotor.getAppliedOutput());
+    // SmartDashboard.putNumber("Pivot Absolute", -absoluteEncoder.getPosition());
+    // System.out.println(-absoluteEncoder.getPosition().getValueAsDouble()*75);
+    // boolean pivotSynced = false;
+    // if(Math.abs(pivotEncoder.getPosition()-(absoluteEncoder.getPosition().getValueAsDouble()*75))<0.1)
+    //   pivotSynced = true;
+    // SmartDashboard.putBoolean("Pivot Synced", pivotSynced);
   }
 }

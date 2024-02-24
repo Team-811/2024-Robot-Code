@@ -15,8 +15,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Util.FieldCentricFacingAngle180;
@@ -25,6 +27,8 @@ import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.OneNoteAuto;
 import frc.robot.commands.ShootingCommand2;
 import frc.robot.commands.ShootingCommandGroup;
+import frc.robot.commands.ThreeNoteAuto;
+import frc.robot.commands.TwoNoteAuto;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shoooter;
@@ -43,7 +47,13 @@ public class RobotContainer {
   private SlewRateLimiter slewwyY = new SlewRateLimiter(0.75);
   private SlewRateLimiter slewwyX = new SlewRateLimiter(.75);
 
-  private SendableChooser<Command> autoChooser = new SendableChooser<>();
+  private SendableChooser<String> startPositionChooser = new SendableChooser<>();
+  private SendableChooser<Integer> numberOfNotesChooser = new SendableChooser<>();
+  private SendableChooser<String> note1Chooser = new SendableChooser<>();
+  private SendableChooser<String> note2Chooser = new SendableChooser<>();
+  private SendableChooser<String> note3Chooser = new SendableChooser<>();
+
+
 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
       .withDeadband(MaxSpeed*0.05).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
@@ -60,7 +70,7 @@ public class RobotContainer {
   // private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
   private double speedScale = 0.45;
-  private double slowSpeed = 0.2;
+  private double slowSpeed = 0.1;
 
   /* Path follower */
   // private Command runAuto = drivetrain.getAutoPath("3 Note Auto");
@@ -81,10 +91,10 @@ public class RobotContainer {
             .withRotationalRate(-joyRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
         ).ignoringDisable(true));
 
-    driveController.leftBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(joyLeftY() * MaxSpeed * slowSpeed) // Drive forward with
+    driveController.leftBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY() * MaxSpeed * slowSpeed)) // Drive forward with
                                                                                            // negative Y (forward)
-            .withVelocityY(joyLeftX() * MaxSpeed * slowSpeed) // Drive left with negative X (left)
-            .withRotationalRate(-joyRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+            .withVelocityY(slewwyX.calculate(joyLeftX() * MaxSpeed * slowSpeed)) // Drive left with negative X (left)
+            .withRotationalRate(-joyRightX() * MaxAngularRate*0.5) // Drive counterclockwise with negative X (left)
         ).ignoringDisable(true));
     driveController.rightBumper().whileTrue(drivetrain.applyRequest(() -> brake));
     driveController.b().whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
@@ -124,8 +134,33 @@ public class RobotContainer {
     // NamedCommands.registerCommand("LowerIntake", new LowerIntake(intake));
     configureBindings();
     SignalLogger.stop();
-    autoChooser.setDefaultOption("No Auto", null);
-    autoChooser.addOption("Stage Note", new OneNoteAuto(intake, drivetrain, shooter));
+
+    startPositionChooser.setDefaultOption("Middle Side", "Mid");
+    startPositionChooser.addOption("Amp Side", "Amp");
+    startPositionChooser.addOption("Stage Side", "Stage");
+
+    numberOfNotesChooser.addOption("0", 0);
+    numberOfNotesChooser.addOption("1", 1);
+    numberOfNotesChooser.setDefaultOption("2", 2);
+    numberOfNotesChooser.addOption("3", 3);
+    numberOfNotesChooser.addOption("4", 4);
+
+    note1Chooser.addOption("Stage", "Stage");
+    note1Chooser.addOption("Amp", "Amp");
+    note1Chooser.setDefaultOption("Subwoofer", "Subwoofer");
+    note1Chooser.addOption("Crazy", "GoCrazy");
+
+    note2Chooser.setDefaultOption("Amp", "Amp");
+    note2Chooser.addOption("Stage", "Stage");
+    note2Chooser.addOption("Subwoofer", "Subwoofer");
+
+    note3Chooser.setDefaultOption("Stage", "Stage");
+    note3Chooser.addOption("Amp", "Amp");
+    note3Chooser.addOption("Subwoofer", "Subwoofer");
+
+
+
+    // autoChooser.addOption("Stage Note", new OneNoteAuto(intake, drivetrain, shooter, ""));
   }
 
   public double joyLeftY(){
@@ -151,20 +186,72 @@ public class RobotContainer {
     if(driveController.getRightX()<0)
       sign=-1;
     if(driveController.getRightX()< -0.1 || driveController.getRightX() > 0.1)
-      return driveController.getRightX()*driveController.getRightX()*sign;
+      return driveController.getRightX()*driveController.getRightX()*sign*0.6;
     return 0;
   }
 
   public Command getAutonomousCommand() {
     // return new SequentialCommandGroup(new ParallelDeadlineGroup(new WaitCommand(5), drivetrain.applyRequest(()->point.withModuleDirection(Rotation2d.fromDegrees(0)))),new ParallelDeadlineGroup(new WaitCommand(5), drivetrain.applyRequest(()->point.withModuleDirection(Rotation2d.fromDegrees(90)))),new ParallelDeadlineGroup(new WaitCommand(5), drivetrain.applyRequest(()->point.withModuleDirection(Rotation2d.fromDegrees(180)))));
     /* First put the drivetrain into auto run mode, then run the auto */
-    return autoChooser.getSelected();
-    // return new CalibrateIntake(intake);
+    // return new SequentialCommandGroup(new ShootingCommandGroup(intake, shooter),drivetrain.getAutoPath("Taxi Auto"));
+    // return drivetrain.getAutoPath("Taxi Auto");
+    if(note1Chooser.getSelected().equals("GoCrazy") && numberOfNotesChooser.getSelected().intValue()!=0)
+      return new OneNoteAuto(intake,drivetrain,shooter,"Godjaosjo");
+    String firstNote = startPositionChooser.getSelected() + note1Chooser.getSelected();
+    String secondNote = "Mid" + note2Chooser.getSelected();
+    String thirdNote = "Mid" + note3Chooser.getSelected();
+    String taxi = startPositionChooser.getSelected() + "CrazyTaxi"+"DO NOT";
+    SmartDashboard.putString("First Note Path", firstNote);
+    switch (numberOfNotesChooser.getSelected().intValue()) {
+      case 0:
+        //Taxi
+      case 1:
+        return new OneNoteAuto(intake, drivetrain, shooter, taxi);
+      case 2:
+        return new OneNoteAuto(intake, drivetrain, shooter, firstNote);
+      case 3:
+        return new TwoNoteAuto(intake, drivetrain, shooter, firstNote, secondNote);
+      case 4:
+        return new ThreeNoteAuto(intake, drivetrain, shooter, firstNote, secondNote, thirdNote);
+      default:
+        break;
+    }
+    return null;
+
+    // return new OneNoteAuto(intake, drivetrain, shooter, "1 Note Middle");
   }
 
   public void updateSmartdashboard(){
     intake.updateSmartdashboard();
     shooter.updateSmartdashboard();
     drivetrain.updateSmartdashboard();
+    startPositionChooser.setDefaultOption("Middle Side", "Mid");
+    startPositionChooser.addOption("Amp Side", "Amp");
+    startPositionChooser.addOption("Stage Side", "Stage");
+
+    numberOfNotesChooser.addOption("0", 0);
+    numberOfNotesChooser.addOption("1", 1);
+    numberOfNotesChooser.setDefaultOption("2", 2);
+    numberOfNotesChooser.addOption("3", 3);
+    numberOfNotesChooser.addOption("4", 4);
+
+    note1Chooser.addOption("Stage", "Stage");
+    note1Chooser.addOption("Amp", "Amp");
+    note1Chooser.setDefaultOption("Subwoofer", "Subwoofer");
+    note1Chooser.addOption("Crazy", "GoCrazy");
+
+    note2Chooser.setDefaultOption("Amp", "Amp");
+    note2Chooser.addOption("Stage", "Stage");
+    note2Chooser.addOption("Subwoofer", "Subwoofer");
+
+    note3Chooser.setDefaultOption("Stage", "Stage");
+    note3Chooser.addOption("Amp", "Amp");
+    note3Chooser.addOption("Subwoofer", "Subwoofer");
+
+    SmartDashboard.putData("Start Position", startPositionChooser);
+    SmartDashboard.putData("Number of Auto Notes", numberOfNotesChooser);
+    SmartDashboard.putData("First Note", note1Chooser);
+    SmartDashboard.putData("Second Note", note2Chooser);
+    SmartDashboard.putData("Third Note", note3Chooser);
   }
 }

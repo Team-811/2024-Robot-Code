@@ -4,27 +4,32 @@
 
 package frc.robot.subsystems;
 
-import com.playingwithfusion.CANVenom;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.Util.ISubsystem;
 
-public class Climber extends SubsystemBase implements ISubsystem{
+public class Climber extends SubsystemBase {
 
-  CANVenom LeftHook = new CANVenom(OperatorConstants.leftHookID);
-  CANVenom RightHook = new CANVenom(OperatorConstants.rightHookID);
+  TalonSRX climberMotor = new TalonSRX(OperatorConstants.climberMotorID);
 
   /** Creates a new Climber. */
-  public Climber() {}
+  public Climber() {
+    climberMotor.setNeutralMode(NeutralMode.Brake);
+  }
+
+  public void spinClimber(double speed){
+    climberMotor.set(ControlMode.PercentOutput, speed);
+  }
+
+  public void stopClimber(){
+    climberMotor.set(ControlMode.PercentOutput, 0);
+  }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-  }
-
-  @Override
-  public void updateSmartdashboard() {
-
   }
 }

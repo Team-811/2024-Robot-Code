@@ -4,21 +4,19 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shoooter;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class AmpShootingCommandGroup extends SequentialCommandGroup {
-  /** Creates a new ShootingCommandGroup. */
-  public AmpShootingCommandGroup(Intake intake, Shoooter shooter) {
+public class TwoNoteAuto extends SequentialCommandGroup {
+  /** Creates a new TwoNoteAuto. */
+  public TwoNoteAuto(Intake outie, CommandSwerveDrivetrain swervy, Shoooter spitout, String pathName1, String pathName2) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(new ParallelDeadlineGroup(new WaitCommand(4), new ParallelCommandGroup(new ShootingCommand(shooter),new SequentialCommandGroup(new WaitCommand(0.1), new EjectNote(intake)))));
+    addCommands(new OneNoteAuto(outie, swervy, spitout, pathName1), new SequencedNoteAuto(outie, swervy, spitout, pathName2));
   }
 }

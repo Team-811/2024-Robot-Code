@@ -16,8 +16,10 @@ import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Util.ISubsystem;
@@ -59,13 +61,19 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             this::seedFieldRelative,  // Consumer for seeding pose against auto
             this::getCurrentRobotChassisSpeeds,
             (speeds)->this.setControl(autoRequest.withSpeeds(speeds)), // Consumer of ChassisSpeeds to drive the robot
-            new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 0),
-                                            new PIDConstants(10, 0, 0),
+            new HolonomicPathFollowerConfig(new PIDConstants(2, 0, 0),
+                                            new PIDConstants(5, 0, 0),
                                             TunerConstants.kSpeedAt12VoltsMps,
                                             driveBaseRadius,
                                             new ReplanningConfig()),
-            ()->false, // Change this if the path needs to be flipped on red vs blue
-            this); // Subsystem for requirements
+            ()->shouldFlip(), // Change this if the path needs to be flipped on red vs blue
+            this); // Subsystem for requirements        
+    }
+
+    private boolean shouldFlip(){
+        if(DriverStation.getAlliance().get() == Alliance.Red)
+            return true;
+        return false;
     }
 
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
@@ -96,9 +104,9 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     }
     @Override
     public void updateSmartdashboard() {
-        this.Modules[0].getDriveMotor().setNeutralMode(NeutralModeValue.Coast);
-        this.Modules[1].getDriveMotor().setNeutralMode(NeutralModeValue.Coast);
-        this.Modules[2].getDriveMotor().setNeutralMode(NeutralModeValue.Coast);
-        this.Modules[3].getDriveMotor().setNeutralMode(NeutralModeValue.Coast);
+        // this.Modules[0].getDriveMotor().setNeutralMode(NeutralModeValue.Coast);
+        // this.Modules[1].getDriveMotor().setNeutralMode(NeutralModeValue.Coast);
+        // this.Modules[2].getDriveMotor().setNeutralMode(NeutralModeValue.Coast);
+        // this.Modules[3].getDriveMotor().setNeutralMode(NeutralModeValue.Coast);
     }
 }

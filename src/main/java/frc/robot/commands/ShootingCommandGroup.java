@@ -19,6 +19,6 @@ public class ShootingCommandGroup extends SequentialCommandGroup {
   public ShootingCommandGroup(Intake intake, Shoooter shooter) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(new ParallelDeadlineGroup(new WaitCommand(3), new ParallelCommandGroup(new ShootingCommand2(shooter),new SequentialCommandGroup(new WaitCommand(2), new EjectNote(intake)))));
+    addCommands(new ParallelDeadlineGroup(new WaitCommand(1), new ParallelCommandGroup(new ShootingCommand2(shooter),new SequentialCommandGroup(new WaitCommand(0), new EjectNote(intake)))));
   }
 }
