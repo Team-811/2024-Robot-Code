@@ -34,33 +34,33 @@ public class Limelight extends SubsystemBase implements ISubsystem{
 
   @Override
   public void periodic() {
-    if (enable) {
-      Double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(ll).getTranslation().getDistance(new Translation3d());
-      Double confidence = 1 - ((targetDistance - 1) / 6);
-      LimelightHelpers.Results result =
-          LimelightHelpers.getLatestResults(ll).targetingResults;
-      if (result.valid) {
-        botpose = LimelightHelpers.getBotPose2d_wpiBlue(ll);
-        if (field.isPoseWithinArea(botpose)) {
-          if (drivetrain.getState().Pose.getTranslation().getDistance(botpose.getTranslation()) < 0.5
-              || trust
-              || result.targets_Fiducials.length > 1) {
-            drivetrain.addVisionMeasurement(
-                botpose,
-                Timer.getFPGATimestamp()
-                    - (result.latency_capture / 1000.0)
-                    - (result.latency_pipeline / 1000.0),
-                VecBuilder.fill(confidence, confidence, .01));
-          } else {
-            distanceError++;
-            SmartDashboard.putNumber("Limelight Error", distanceError);
-          }
-        } else {
-          fieldError++;
-          SmartDashboard.putNumber("Field Error", fieldError);
-        }
-      }
-    }
+    // if (enable) {
+    //   Double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(ll).getTranslation().getDistance(new Translation3d());
+    //   Double confidence = 1 - ((targetDistance - 1) / 6);
+    //   LimelightHelpers.Results result =
+    //       LimelightHelpers.getLatestResults(ll).targetingResults;
+    //   if (result.valid) {
+    //     botpose = LimelightHelpers.getBotPose2d_wpiBlue(ll);
+    //     if (field.isPoseWithinArea(botpose)) {
+    //       if (drivetrain.getState().Pose.getTranslation().getDistance(botpose.getTranslation()) < 0.5
+    //           || trust
+    //           || result.targets_Fiducials.length > 1) {
+    //         drivetrain.addVisionMeasurement(
+    //             botpose,
+    //             Timer.getFPGATimestamp()
+    //                 - (result.latency_capture / 1000.0)
+    //                 - (result.latency_pipeline / 1000.0),
+    //             VecBuilder.fill(confidence, confidence, .01));
+    //       } else {
+    //         distanceError++;
+    //         SmartDashboard.putNumber("Limelight Error", distanceError);
+    //       }
+    //     } else {
+    //       fieldError++;
+    //       SmartDashboard.putNumber("Field Error", fieldError);
+    //     }
+    //   }
+    // }
   }
 
   public void setAlliance(Alliance alliance) {

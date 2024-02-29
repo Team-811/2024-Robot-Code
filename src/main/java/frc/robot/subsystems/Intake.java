@@ -129,8 +129,8 @@ public class Intake extends SubsystemBase implements ISubsystem{
   @Override
   public void updateSmartdashboard() {
     // System.out.println(pivotEncoder.getPosition());
-    SmartDashboard.putNumber("Pivot Relative", pivotEncoder.getPosition());
-    SmartDashboard.putNumber("Something", pivotMotor.getAppliedOutput());
+    // SmartDashboard.putNumber("Pivot Relative", pivotEncoder.getPosition());
+    // SmartDashboard.putNumber("Something", pivotMotor.getAppliedOutput());
     // SmartDashboard.putNumber("Pivot Absolute", -absoluteEncoder.getPosition());
     // System.out.println(-absoluteEncoder.getPosition().getValueAsDouble()*75);
     // boolean pivotSynced = false;

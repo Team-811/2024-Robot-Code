@@ -13,7 +13,7 @@ public class Constants {
         public static final int pivotMotorID = 17;
         public static final int climberMotorID = 21;
         public static final double intakeShooterSetPoint = -0.5;
-        public static final double intakeFloorSetPoint = 44.5;
+        public static final double intakeFloorSetPoint = 45;
         public static final int kDriverControllerPort = 0;
         public static final int kOperatorControllerPort = 1;
         public static final double intakeWheelskP = 0.00001;
@@ -36,11 +36,15 @@ public class Constants {
         public static final int rightShooterWheelID  = 7 ;
         public static final int leftHookID = 19;
         public static final int rightHookID = 20;
+        
         //max speed 5675
         public static final double shootSpeed = 5675;
         public static final double ampSpeed = 750; 
 
         // Speed value from 0 to 1
-        public static final double climberSpeed = 0.5;
+        public static final double climberSpeed = 0.75;
+
+        public static final int numberofLEDs = 155;
+        public static final int LEDPWMID = 2;
       }
 }
