@@ -13,7 +13,7 @@ public class Constants {
         public static final int pivotMotorID = 17;
         public static final int climberMotorID = 21;
         public static final double intakeShooterSetPoint = -0.5;
-        public static final double intakeFloorSetPoint = 45;
+        public static final double intakeFloorSetPoint = 45.75;
         public static final int kDriverControllerPort = 0;
         public static final int kOperatorControllerPort = 1;
         public static final double intakeWheelskP = 0.00001;
@@ -46,5 +46,9 @@ public class Constants {
 
         public static final int numberofLEDs = 155;
         public static final int LEDPWMID = 2;
+
+        public static final double fastSpeed = 0.95;
+        public static final double slowSpeed = 0.1;
+        public static final double normalSpeed = 0.55;
       }
 }

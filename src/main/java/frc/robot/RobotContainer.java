@@ -55,8 +55,8 @@ public class RobotContainer {
   //************************************************ */
   private final Climber climber = new Climber();
 
-  private SlewRateLimiter slewwyY = new SlewRateLimiter(0.75);
-  private SlewRateLimiter slewwyX = new SlewRateLimiter(.75);
+  private SlewRateLimiter slewwyY = new SlewRateLimiter(1.25);
+  private SlewRateLimiter slewwyX = new SlewRateLimiter(1.25);
 
   private SendableChooser<String> startPositionChooser = new SendableChooser<>();
   private SendableChooser<Integer> numberOfNotesChooser = new SendableChooser<>();
@@ -80,9 +80,8 @@ public class RobotContainer {
   private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
-  private double speedScale = 0.45;
-  private double slowSpeed = 0.1;
-  private double lessSlowSpeed = 0.8;
+  private double speedScale = OperatorConstants.normalSpeed;
+  private double slowSpeed = OperatorConstants.slowSpeed;
 
   /* Path follower */
   //private Command runAuto = drivetrain.getAutoPath("3 Note Auto");
@@ -103,6 +102,11 @@ public class RobotContainer {
 
     // driveController.rightTrigger().whileTrue(new CoopertitionLEDs(leds));
     // driveController.leftTrigger().whileTrue(new AmplifyLEDs(leds));
+    
+    System.out.println(speedScale);
+  
+    driveController.rightBumper().whileTrue(new InstantCommand(()->speedScale = OperatorConstants.fastSpeed));
+    driveController.rightBumper().whileFalse(new InstantCommand(()->speedScale = OperatorConstants.normalSpeed));
 
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
         drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
@@ -111,16 +115,16 @@ public class RobotContainer {
             .withRotationalRate(-joyRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
         ).ignoringDisable(true));
 
-    driveController.leftBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY() * MaxSpeed * slowSpeed)) // Drive forward with
+    driveController.leftBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * slowSpeed) // Drive forward with
                                                                                            // negative Y (forward)
-            .withVelocityY(slewwyX.calculate(joyLeftX() * MaxSpeed * slowSpeed)) // Drive left with negative X (left)
+            .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * slowSpeed) // Drive left with negative X (left)
             .withRotationalRate(-joyRightX() * MaxAngularRate*0.5) // Drive counterclockwise with negative X (left)
         ).ignoringDisable(true));
-    driveController.rightBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY() * MaxSpeed * slowSpeed)) // Drive forward with
-                                                                                        // negative Y (forward)
-          .withVelocityY(slewwyX.calculate(joyLeftX() * MaxSpeed * lessSlowSpeed)) // Drive left with negative X (left)
-          .withRotationalRate(-joyRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-       ).ignoringDisable(true));
+    // driveController.rightBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * lessSlowSpeed) // Drive forward with
+    //                                                                                     // negative Y (forward)
+    //       .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * lessSlowSpeed) // Drive left with negative X (left)
+    //       .withRotationalRate(-joyRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+    //    ).ignoringDisable(true));
     driveController.rightTrigger().whileTrue(drivetrain.applyRequest(() -> brake));
     driveController.b().whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
                                                                                                              // negative Y (forward)
