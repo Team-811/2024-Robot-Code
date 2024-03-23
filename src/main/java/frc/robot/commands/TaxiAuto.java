@@ -4,6 +4,7 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
@@ -17,7 +18,7 @@ public class TaxiAuto extends SequentialCommandGroup {
   public TaxiAuto(Intake outie, CommandSwerveDrivetrain swervy, Shoooter spitout, String pathName) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(new ShootingCommandGroup(outie, spitout), swervy.getAutoPath(pathName));
+    addCommands(new ShootingCommandGroup(outie, spitout), new ParallelDeadlineGroup(swervy.getAutoPath(pathName), new SpinIntake(outie)), new RaiseIntake(outie));
     // addCommands(new ShootingCommandGroup(outie, spitout), new ParallelDeadlineGroup(new WaitCommand(2), new LowerIntake(outie)),new ParallelDeadlineGroup(swervy.getAutoPath(pathName), new SpinIntake(outie)), new ParallelDeadlineGroup(new WaitCommand(3),  new RaiseIntake(outie)),new ShootingCommandGroup(outie, spitout));
   }
 }

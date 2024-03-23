@@ -12,8 +12,8 @@ public class Constants {
         public static final int pivotLimitSwitchID = 2;
         public static final int pivotMotorID = 17;
         public static final int climberMotorID = 21;
-        public static final double intakeShooterSetPoint = -0.5;
-        public static final double intakeFloorSetPoint = 45.75;
+        public static final double intakeShooterSetPoint = 0;
+        public static final double intakeFloorSetPoint = 47.5;
         public static final int kDriverControllerPort = 0;
         public static final int kOperatorControllerPort = 1;
         public static final double intakeWheelskP = 0.00001;
@@ -21,9 +21,9 @@ public class Constants {
         public static final double intakeWheelskD = 0.003;
         public static final double intakeWheelskIz = 0;
         public static final double intakeWheelskFF = 0.00000481;
-        public static final double intakePivotkP = 0.026;
+        public static final double intakePivotkP = 0.08;
         public static final double intakePivotkI = 0;
-        public static final double intakePivotkD = 0.002;
+        public static final double intakePivotkD = 0.008;
         public static final double intakePivotkIz = 3;
         public static final double intakePivotkFF = 0;
         public static final double intakeWheelsSpeed = -5000;
@@ -42,13 +42,13 @@ public class Constants {
         public static final double ampSpeed = 750; 
 
         // Speed value from 0 to 1
-        public static final double climberSpeed = 0.75;
+        public static final double climberSpeed = 1;
 
-        public static final int numberofLEDs = 155;
-        public static final int LEDPWMID = 2;
 
         public static final double fastSpeed = 0.95;
         public static final double slowSpeed = 0.1;
-        public static final double normalSpeed = 0.55;
+        public static final double normalSpeed = 0.5;
+
+        public static final int BLINKIN_LED_CONTROLLER_PORT = 0;
       }
 }

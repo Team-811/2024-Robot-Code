@@ -14,6 +14,8 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -47,16 +49,17 @@ public class RobotContainer {
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController driveController = new CommandXboxController(OperatorConstants.kDriverControllerPort); 
+  private final CommandXboxController controller3 = new CommandXboxController(2);
    private final CommandXboxController operatorController = new CommandXboxController(OperatorConstants.kOperatorControllerPort);// My driveController
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // My drivetrain
   private final Shoooter shooter = new Shoooter();
   private final Intake intake = new Intake();
-  // private final LEDs leds = new LEDs();
+  private final LEDs leds = new LEDs();
   //************************************************ */
   private final Climber climber = new Climber();
 
-  private SlewRateLimiter slewwyY = new SlewRateLimiter(1.25);
-  private SlewRateLimiter slewwyX = new SlewRateLimiter(1.25);
+  private SlewRateLimiter slewwyY = new SlewRateLimiter(1.5);
+  private SlewRateLimiter slewwyX = new SlewRateLimiter(1.5);
 
   private SendableChooser<String> startPositionChooser = new SendableChooser<>();
   private SendableChooser<Integer> numberOfNotesChooser = new SendableChooser<>();
@@ -78,7 +81,7 @@ public class RobotContainer {
   private final PhoenixPIDController steerController180 = new PhoenixPIDController(0.3, 0.001, 0.01);
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-  private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+  // private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
   private double speedScale = OperatorConstants.normalSpeed;
   private double slowSpeed = OperatorConstants.slowSpeed;
@@ -100,8 +103,8 @@ public class RobotContainer {
     //************************************************************ */
      operatorController.rightTrigger().whileTrue(new ExtendClimber(climber));
 
-    // driveController.rightTrigger().whileTrue(new CoopertitionLEDs(leds));
-    // driveController.leftTrigger().whileTrue(new AmplifyLEDs(leds));
+    driveController.back().whileTrue(new CoopertitionLEDs(leds));
+    driveController.start().whileTrue(new AmplifyLEDs(leds));
     
     System.out.println(speedScale);
   
@@ -109,9 +112,9 @@ public class RobotContainer {
     driveController.rightBumper().whileFalse(new InstantCommand(()->speedScale = OperatorConstants.normalSpeed));
 
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
-        drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
+        drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * getSpeedScale()) // Drive forward with
                                                                                            // negative Y (forward)
-            .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * speedScale) // Drive left with negative X (left)
+            .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * getSpeedScale()) // Drive left with negative X (left)
             .withRotationalRate(-joyRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
         ).ignoringDisable(true));
 
@@ -129,7 +132,7 @@ public class RobotContainer {
     driveController.b().whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
                                                                                                              // negative Y (forward)
             .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * speedScale) // Drive left with negative X (left)
-            .withTargetDirection(Rotation2d.fromDegrees(90))
+            .withTargetDirection(Rotation2d.fromDegrees(getAmpAngle()))
     ));
     driveController.x().whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * speedScale) // Drive forward with
                                                                                                              // negative Y (forward)
@@ -146,9 +149,55 @@ public class RobotContainer {
             .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * speedScale) // Drive left with negative X (left)
             .withTargetDirection(Rotation2d.fromDegrees(60))
     ));
-
+    
     // reset the field-centric heading on left bumper press
     driveController.leftTrigger().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+
+      controller3.back().whileTrue(new CoopertitionLEDs(leds));
+      controller3.start().whileTrue(new AmplifyLEDs(leds));
+      
+      System.out.println(speedScale);
+    
+      controller3.rightBumper().whileTrue(new InstantCommand(()->speedScale = OperatorConstants.fastSpeed));
+      controller3.rightBumper().whileFalse(new InstantCommand(()->speedScale = OperatorConstants.normalSpeed));
+
+
+      controller3.leftBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * slowSpeed) // Drive forward with
+                                                                                            // negative Y (forward)
+              .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * slowSpeed) // Drive left with negative X (left)
+              .withRotationalRate(-joyRightX() * MaxAngularRate*0.5) // Drive counterclockwise with negative X (left)
+          ).ignoringDisable(true));
+      // driveController.rightBumper().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * lessSlowSpeed) // Drive forward with
+      //                                                                                     // negative Y (forward)
+      //       .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * lessSlowSpeed) // Drive left with negative X (left)
+      //       .withRotationalRate(-joyRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+      //    ).ignoringDisable(true));
+      // driveController.rightTrigger().whileTrue(drivetrain.applyRequest(() -> brake));
+      controller3.pov(90).whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * getSpeedScale()) // Drive forward with
+                                                                                                              // negative Y (forward)
+              .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * getSpeedScale()) // Drive left with negative X (left)
+              .withTargetDirection(Rotation2d.fromDegrees(90))
+      ));
+      controller3.pov(180).whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * getSpeedScale()) // Drive forward with
+                                                                                                              // negative Y (forward)
+              .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * getSpeedScale()) // Drive left with negative X (left)
+              .withTargetDirection(Rotation2d.fromDegrees(0))
+      ));
+      controller3.pov(135).whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * getSpeedScale()) // Drive forward with
+                                                                                                              // negative Y (forward)
+              .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * getSpeedScale()) // Drive left with negative X (left)
+              .withTargetDirection(Rotation2d.fromDegrees(-60))
+      ));
+      controller3.pov(225).whileTrue(drivetrain.applyRequest(()-> driveFacing.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * getSpeedScale()) // Drive forward with
+                                                                                                              // negative Y (forward)
+              .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * getSpeedScale()) // Drive left with negative X (left)
+              .withTargetDirection(Rotation2d.fromDegrees(60))
+      ));
+      
+      controller3.a().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+
+      // reset the field-centric heading on left bumper press
+      driveController.leftTrigger().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
 
     if (Utils.isSimulation()) {
       drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(-90)));
@@ -187,35 +236,66 @@ public class RobotContainer {
     note3Chooser.addOption("Amp", "Amp");
     note3Chooser.addOption("Subwoofer", "Subwoofer");
 
-
-
+    
      //autoChooser.addOption("Stage Note", new OneNoteAuto(intake, drivetrain, shooter, ""));
+  }
+
+  public double getAmpAngle(){
+    if(DriverStation.getAlliance().get() == Alliance.Red)
+      return 90;
+    return -90;
   }
 
   public double joyLeftY(){
     int sign = 1;
-    if(driveController.getLeftY()<0)
-      sign=-1;
-    if(driveController.getLeftY()< -0.1 || driveController.getLeftY() > 0.1)
-      return driveController.getLeftY()*driveController.getLeftY()*sign;
+    
+    if(Math.abs(driveController.getLeftY()) > 0.1 || Math.abs(controller3.getLeftY()) > 0.1)
+    {
+      if(Math.abs(driveController.getLeftY())> Math.abs(controller3.getLeftY())){
+        if(driveController.getLeftY()<0)
+          sign=-1;
+        return driveController.getLeftY()*driveController.getLeftY()*sign;
+      }
+      if(controller3.getLeftY()<0)
+          sign=-1;
+      return controller3.getLeftY()*controller3.getLeftY()*sign;
+    }
     return 0;
   }
 
   public double joyLeftX(){
     int sign = 1;
-    if(driveController.getLeftX()<0)
-      sign=-1;
-    if(driveController.getLeftX()< -0.1 || driveController.getLeftX() > 0.1)
-      return driveController.getLeftX()*driveController.getLeftX()*sign;
+    
+    if(Math.abs(driveController.getLeftX()) > 0.1 || Math.abs(controller3.getLeftX()) > 0.1)
+    {
+      if(Math.abs(driveController.getLeftX())> Math.abs(controller3.getLeftX())){
+        if(driveController.getLeftX()<0)
+          sign=-1;
+        return driveController.getLeftX()*driveController.getLeftX()*sign;
+      }
+      if(controller3.getLeftX()<0)
+          sign=-1;
+      return controller3.getLeftX()*controller3.getLeftX()*sign;
+    }
     return 0;
   }
 
   public double joyRightX(){
     int sign = 1;
-    if(driveController.getRightX()<0)
-      sign=-1;
-    if(driveController.getRightX()< -0.1 || driveController.getRightX() > 0.1)
-      return driveController.getRightX()*driveController.getRightX()*sign*0.6;
+    if(Math.abs(driveController.getRightX()) > 0.1 || Math.abs(controller3.getRawAxis(3)) > 0.1){
+    //  System.out.println(Math.abs(driveController.getRightX()) > Math.abs(controller3.getRawAxis(3)));
+
+      if(Math.abs(driveController.getRightX()) > Math.abs(controller3.getRawAxis(3))){
+        if(driveController.getRightX()<0)
+         sign=-1;
+        return driveController.getRightX()*driveController.getRightX()*sign*0.6;
+      }
+      // System.out.println(controller3.getRawAxis(3));
+
+      if(controller3.getRawAxis(3)<0)
+         sign=-1;
+      return controller3.getRawAxis(3)*controller3.getRawAxis(3)*sign*0.6;
+    }
     return 0;
   }
 
@@ -224,12 +304,12 @@ public class RobotContainer {
     /* First put the drivetrain into auto run mode, then run the auto */
     // return new SequentialCommandGroup(new ShootingCommandGroup(intake, shooter),drivetrain.getAutoPath("Taxi Auto"));
     // return drivetrain.getAutoPath("Taxi Auto");
-    if(note1Chooser.getSelected().equals("GoCrazy") && numberOfNotesChooser.getSelected().intValue()!=0)
-      return new OneNoteAuto(intake,drivetrain,shooter,"Godjaosjo");
+    // if(note1Chooser.getSelected().equals("GoCrazy") && numberOfNotesChooser.getSelected().intValue()!=0)
+    //   return new OneNoteAuto(intake,drivetrain,shooter,"Godjaosjo");
     String firstNote = startPositionChooser.getSelected() + note1Chooser.getSelected();
     String secondNote = "Mid" + note2Chooser.getSelected();
     String thirdNote = "Mid" + note3Chooser.getSelected();
-    String taxi = startPositionChooser.getSelected() + "Taxi";
+    String taxi = startPositionChooser.getSelected() + "GoCrazy";
     SmartDashboard.putString("First Note Path", firstNote);
     switch (numberOfNotesChooser.getSelected().intValue()) {
       case 0:
@@ -248,6 +328,15 @@ public class RobotContainer {
     return null;
 
     // return new OneNoteAuto(intake, drivetrain, shooter, "1 Note Middle");
+  }
+
+  public double getSpeedScale() {
+    if(driveController.leftBumper().getAsBoolean())
+      return Constants.OperatorConstants.slowSpeed;
+    if(driveController.rightBumper().getAsBoolean())
+      return Constants.OperatorConstants.fastSpeed;
+    // System.out.println(-controller3.getRawAxis(2)*0.4+0.5);
+    return -controller3.getRawAxis(2)*0.4+0.5;
   }
 
   public void updateSmartdashboard(){

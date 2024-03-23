@@ -20,8 +20,10 @@ public class SequencedNoteAuto extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     double number = 3;
-    if(pathName.equals("MidMid"))
-      number = 2.5;
+    if(pathName.equals("MidSubwoofer"))
+      number = 1.5;
+    if(pathName.equals("StageGoCrazy"))
+      number  = 5;
     addCommands(new ParallelDeadlineGroup(swervy.getAutoPath(pathName), new SequentialCommandGroup(new ParallelDeadlineGroup(new WaitCommand(number), new SpinIntake(outie)), new RaiseIntake(outie))), new RaiseIntake(outie),new ShootingCommandGroup(outie, spitout));
   }
 }
