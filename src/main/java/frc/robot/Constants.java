@@ -8,11 +8,11 @@ package frc.robot;
 public class Constants {
     public static class OperatorConstants {
         public static final int intakeMotorWheelsID = 18;
-        public static final int noteLimitSwitchID = 1;
+        public static final int noteLimitSwitchID = 0;
         public static final int pivotLimitSwitchID = 2;
         public static final int pivotMotorID = 17;
         public static final int climberMotorID = 21;
-        public static final double intakeShooterSetPoint = 0;
+        public static final double intakeShooterSetPoint = 0.25;
         public static final double intakeFloorSetPoint = 47.5;
         public static final int kDriverControllerPort = 0;
         public static final int kOperatorControllerPort = 1;
@@ -38,16 +38,18 @@ public class Constants {
         public static final int rightHookID = 20;
         
         //max speed 5675
+        //regular shoot speed 5675
         public static final double shootSpeed = 5675;
-        public static final double ampSpeed = 750; 
+        //regular amp speed 750 or 2
+        public static final double ampSpeed = 2; 
 
         // Speed value from 0 to 1
         public static final double climberSpeed = 1;
 
-
         public static final double fastSpeed = 0.95;
         public static final double slowSpeed = 0.1;
         public static final double normalSpeed = 0.5;
+        // regular speed 0.5
 
         public static final int BLINKIN_LED_CONTROLLER_PORT = 0;
       }

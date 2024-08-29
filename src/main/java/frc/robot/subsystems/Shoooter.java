@@ -42,11 +42,11 @@ public class Shoooter extends SubsystemBase implements ISubsystem {
   }
 
  public void spinShooter(double sped) {
-    if(sped == OperatorConstants.shootSpeed){
-      leftWheels.set(1);
-      rightWheels.set(1);
-      return;
-    }
+    // if(sped == OperatorConstants.shootSpeed){
+    //   leftWheels.set(1);
+    //   rightWheels.set(1);
+    //   return;
+    // }
 
     leftPID.setP(OperatorConstants.shooterkP);
     leftPID.setI(OperatorConstants.shooterkI);

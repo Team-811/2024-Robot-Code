@@ -55,7 +55,7 @@ public class IntakeCommand extends Command {
     }
     if (isTurningToShooter == false && isTurningToFloor == false) 
       myIntake.stopPivot();
-    if (shouldTurnToShooter.getAsBoolean()== true) {
+    if (shouldTurnToShooter.getAsBoolean()== true || myIntake.limitSwitchOutput()) {
       isTurningToFloor=false;
       isTurningToShooter = true; 
     }

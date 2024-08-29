@@ -4,12 +4,16 @@
 
 package frc.robot;
 
+// import org.photonvision.PhotonCamera;
+// import org.photonvision.targeting.PhotonPipelineResult;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.utility.PhoenixPIDController;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -26,6 +30,7 @@ import frc.robot.Util.FieldCentricFacingAngle180;
 import frc.robot.commands.AmpShootingCommandGroup;
 import frc.robot.commands.AmplifyLEDs;
 import frc.robot.commands.CoopertitionLEDs;
+import frc.robot.commands.CrazyIWasCrazyOnce;
 // import frc.robot.commands.AmplifyLEDs;
 // import frc.robot.commands.CoopertitionLEDs;
 import frc.robot.commands.ExtendClimber;
@@ -66,13 +71,17 @@ public class RobotContainer {
   private SendableChooser<String> note1Chooser = new SendableChooser<>();
   private SendableChooser<String> note2Chooser = new SendableChooser<>();
   private SendableChooser<String> note3Chooser = new SendableChooser<>();
-
-
+ // PhotonCamera camera = new PhotonCamera("Microsoft_LifeCam_HD-3000");
+  
 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
       .withDeadband(MaxSpeed*0.05).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // I want field-centric
                                                                // driving in open loop
+  private final SwerveRequest.RobotCentric robotCentric = new SwerveRequest.RobotCentric()
+      .withDeadband(MaxSpeed*0.05).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // I want robot-centric
+    
   private final SwerveRequest.FieldCentricFacingAngle driveFacing = new SwerveRequest.FieldCentricFacingAngle()
       .withDeadband(MaxSpeed * 0.05).withDriveRequestType(DriveRequestType.OpenLoopVoltage);
       private final FieldCentricFacingAngle180 driveFacing180 = new FieldCentricFacingAngle180()
@@ -86,6 +95,8 @@ public class RobotContainer {
   private double speedScale = OperatorConstants.normalSpeed;
   private double slowSpeed = OperatorConstants.slowSpeed;
 
+  private PIDController noteAimPID = new PIDController(1/90.0, 0, 0);
+
   /* Path follower */
   //private Command runAuto = drivetrain.getAutoPath("3 Note Auto");
   //private Command runAuto = drivetrain.getAutoPath("3 Note Auto");
@@ -94,7 +105,7 @@ public class RobotContainer {
   private void configureBindings() {
     driveFacing.HeadingController = steerController;
     driveFacing180.HeadingController = steerController180;
-    operatorController.leftTrigger().whileTrue(new InstantCommand(()->intake.syncEncoder(), intake));
+    // operatorController.leftTrigger().whileTrue(new InstantCommand(()->intake.syncEncoder(), intake));
     operatorController.b().whileTrue(new AmpShootingCommandGroup(intake,shooter));
     intake.setDefaultCommand(new IntakeCommand(intake, ()-> operatorController.a().getAsBoolean(), ()-> operatorController.rightBumper().getAsBoolean(),()-> operatorController.leftBumper().getAsBoolean(),()->operatorController.y().getAsBoolean()));
     operatorController.x().whileTrue(new ShootingCommandGroup(intake,shooter));
@@ -103,8 +114,14 @@ public class RobotContainer {
     //************************************************************ */
      operatorController.rightTrigger().whileTrue(new ExtendClimber(climber));
 
-    driveController.back().whileTrue(new CoopertitionLEDs(leds));
-    driveController.start().whileTrue(new AmplifyLEDs(leds));
+    driveController.leftTrigger().whileTrue(drivetrain.applyRequest(()->robotCentric.withVelocityX(slewwyY.calculate(joyLeftY()) * MaxSpeed * getSpeedScale()) // Drive forward with
+                                                                                           // negative Y (forward)
+            .withVelocityY(slewwyX.calculate(joyLeftX()) * MaxSpeed * getSpeedScale()) // Drive left with negative X (left)
+            .withRotationalRate(-rotationOffset() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+        ).ignoringDisable(true));
+
+    // driveController.back().whileTrue(new CoopertitionLEDs(leds));
+    // driveController.start().whileTrue(new AmplifyLEDs(leds));
     
     System.out.println(speedScale);
   
@@ -151,7 +168,7 @@ public class RobotContainer {
     ));
     
     // reset the field-centric heading on left bumper press
-    driveController.leftTrigger().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+    driveController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
 
       controller3.back().whileTrue(new CoopertitionLEDs(leds));
       controller3.start().whileTrue(new AmplifyLEDs(leds));
@@ -197,7 +214,7 @@ public class RobotContainer {
       controller3.a().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
 
       // reset the field-centric heading on left bumper press
-      driveController.leftTrigger().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+      // driveController.leftTrigger().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
 
     if (Utils.isSimulation()) {
       drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(-90)));
@@ -244,6 +261,18 @@ public class RobotContainer {
     if(DriverStation.getAlliance().get() == Alliance.Red)
       return 90;
     return -90;
+  }
+
+  public double rotationOffset(){
+    // PhotonPipelineResult result = camera.getLatestResult();
+    
+    // if(result.hasTargets()){
+    //   double angleOffset = result.getBestTarget().getYaw()/90;
+    //   // angleOffset = Math.atan(result.getBestTarget().getYaw()/result.getBestTarget().getPitch());
+    //   return -noteAimPID.calculate(result.getBestTarget().getYaw(), 0);
+    // }
+    // return joyRightX();
+    return 0;
   }
 
   public double joyLeftY(){
@@ -311,6 +340,8 @@ public class RobotContainer {
     String thirdNote = "Mid" + note3Chooser.getSelected();
     String taxi = startPositionChooser.getSelected() + "GoCrazy";
     SmartDashboard.putString("First Note Path", firstNote);
+    if(note1Chooser.getSelected().equals("GoCrazy"))
+      return new CrazyIWasCrazyOnce(intake, drivetrain, shooter, taxi);
     switch (numberOfNotesChooser.getSelected().intValue()) {
       case 0:
         //Taxi
@@ -336,7 +367,7 @@ public class RobotContainer {
     if(driveController.rightBumper().getAsBoolean())
       return Constants.OperatorConstants.fastSpeed;
     // System.out.println(-controller3.getRawAxis(2)*0.4+0.5);
-    return -controller3.getRawAxis(2)*0.4+0.5;
+    return -controller3.getRawAxis(2)*0.4+Constants.OperatorConstants.normalSpeed;
   }
 
   public void updateSmartdashboard(){

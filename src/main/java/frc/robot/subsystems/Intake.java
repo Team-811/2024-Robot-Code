@@ -82,7 +82,7 @@ public class Intake extends SubsystemBase implements ISubsystem{
     wheelsPID.setIZone(OperatorConstants.intakeWheelskIz);
     wheelsPID.setFF(OperatorConstants.intakeWheelskFF);
     wheelsPID.setOutputRange(-1, 1);
-    if (noteLimitSwitch.get())
+    if (!noteLimitSwitch.get())
       wheelsPID.setReference(sped, ControlType.kVelocity);
       // Wheels.set(sped/5650);
     else {
@@ -101,6 +101,9 @@ public class Intake extends SubsystemBase implements ISubsystem{
     wheelsPID.setFF(OperatorConstants.intakeWheelskFF);
     wheelsPID.setOutputRange(-1, 1);
     wheelsPID.setReference(sped, ControlType.kVelocity);
+  }
+  public boolean limitSwitchOutput(){
+    return noteLimitSwitch.get();
   }
   public boolean calibrate () {
     // pivotMotor.set(-0.1);
@@ -128,6 +131,7 @@ public class Intake extends SubsystemBase implements ISubsystem{
 
   @Override
   public void updateSmartdashboard() {
+    SmartDashboard.putBoolean("Limit Switch", limitSwitchOutput());
     // System.out.println(pivotEncoder.getPosition());
     // SmartDashboard.putNumber("Pivot Relative", pivotEncoder.getPosition());
     // SmartDashboard.putNumber("Something", pivotMotor.getAppliedOutput());
