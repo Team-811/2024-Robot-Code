@@ -16,7 +16,7 @@ public class Constants {
         public static final double intakeFloorSetPoint = 47.5;
         public static final int kDriverControllerPort = 0;
         public static final int kOperatorControllerPort = 1;
-        public static final double intakeWheelskP = 0.00001;
+        public static final double intakeWheelskP = 0.00001
         public static final double intakeWheelskI = 0.000001;
         public static final double intakeWheelskD = 0.003;
         public static final double intakeWheelskIz = 0;
