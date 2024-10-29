@@ -19,6 +19,7 @@ public class SequencedNoteAuto extends SequentialCommandGroup {
   public SequencedNoteAuto(Intake outie, CommandSwerveDrivetrain swervy, Shoooter spitout, String pathName) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
+   // pathName = "AmpAmp";
     double number = 3;
     if(pathName.equals("MidSubwoofer"))
       number = 1.5;

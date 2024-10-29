@@ -17,6 +17,7 @@ public class OneNoteAuto extends SequentialCommandGroup {
   public OneNoteAuto(Intake outie, CommandSwerveDrivetrain swervy, Shoooter spitout, String pathName) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
+    //pathName="AmpAmp";
     addCommands(new ShootingCommandGroup(outie, spitout), new SequencedNoteAuto(outie, swervy, spitout, pathName));
     // addCommands(new ShootingCommandGroup(outie, spitout), new ParallelDeadlineGroup(new WaitCommand(2), new LowerIntake(outie)),new ParallelDeadlineGroup(swervy.getAutoPath(pathName), new SpinIntake(outie)), new ParallelDeadlineGroup(new WaitCommand(3),  new RaiseIntake(outie)),new ShootingCommandGroup(outie, spitout));
   }

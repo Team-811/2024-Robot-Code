@@ -17,6 +17,7 @@ public class TwoNoteAuto extends SequentialCommandGroup {
   public TwoNoteAuto(Intake outie, CommandSwerveDrivetrain swervy, Shoooter spitout, String pathName1, String pathName2) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
+    pathName2="AmpAmp";
     addCommands(new OneNoteAuto(outie, swervy, spitout, pathName1), new SequencedNoteAuto(outie, swervy, spitout, pathName2));
   }
 }
